@@ -1,13 +1,5 @@
-from gettext import install
-import imp
-
-
-import sys
-
-from openpyxl import NUMPY
-
-
 import numpy as np
+import pandas as pd
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -16,6 +8,9 @@ from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
 
+import datetime as dt
+
+#################################################
 # Database Setup
 #################################################
 engine = create_engine("sqlite:///hawaii.sqlite")
@@ -28,17 +23,22 @@ Base.prepare(engine, reflect=True)
 # Save reference to the table
 Measurement = Base.classes.measurement
 Station = Base.classes.station
+
+# Create our session (link) from Python to the DB
+session = Session(engine)
+
 #################################################
 # Flask Setup
 #################################################
-
 app = Flask(__name__)
 
-
-# Homepage: List all routes that are available
+#################################################
+# Flask Routes
+#################################################
 
 @app.route("/")
 def welcome():
+    """List all available api routes."""
     """List all available api routes."""
     return (
         f"Available Routes:<br/>"
@@ -48,6 +48,10 @@ def welcome():
         f"/api/v1.0/<start><br/>"
         f"/api/v1.0/<start>/<end>"
     )
+
+#################################################
+# Precipitation
+#################################################
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
@@ -63,11 +67,20 @@ def precipitation():
     
     return jsonify(precip)
 
-    @app.route('/api/v1.0/stations')
-    def stations():
-        stations_all = session.query(Station.station).all()
+#################################################
+# Stations
+#################################################
+
+@app.route('/api/v1.0/stations')
+def stations():
+
+    stations_all = session.query(Station.station).all()
 
     return jsonify(stations_all)
+
+#################################################
+# Tobs
+#################################################
 
 @app.route('/api/v1.0/tobs') 
 def tobs():  
@@ -81,6 +94,10 @@ def tobs():
                 .order_by(Measurement.tobs).all())
     
     return jsonify(lastyear)
+
+#################################################
+# Start
+##################################################
 
 @app.route('/api/v1.0/<start>') 
 def start(start=None):
@@ -98,6 +115,10 @@ def start(start=None):
     
     return jsonify(tavg, tmax, tmin)
 
+#################################################
+# Start & End
+##################################################
+
 @app.route('/api/v1.0/<start>/<end>') 
 def startend(start=None, end=None):
 
@@ -114,17 +135,6 @@ def startend(start=None, end=None):
     
     return jsonify(tavg, tmax, tmin)
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
